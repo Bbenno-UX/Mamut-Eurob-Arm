@@ -11,16 +11,19 @@ import smbus
 #from I2C_LCD import lcddriver
 import os
 import numpy as np
+#Punkte im Raum aus sicht von Arm und Kamera,muss für den Eurobot angepasst werden
 punkte_rpi=[[317,127],[286,90],[184,66],[181,128],[103,108],[94,145],[168,188],[234,177]]
 punkte_arm=[[1250,1400],[1250,1650],[1350,1950],[1800,1350],[1600,1950],[1900,1600],[2050,1100],[1900,1000]]
 
 class dreieck():
     def __init__(self,pol1,pol2):
+        
         self.pol1=Polygon(pol1[0],pol1[1],pol1[2])
         self.pol2=Polygon(pol2[0],pol2[1],pol2[2])
         pol1=np.array(pol1)
         #pol2=np.array(pol2)
         inds=[[1,2],[2,0],[0,1]]
+        #zählt zum Interpolationsversuch hier
         self.ander=np.argmax(np.linalg.norm(np.array([pol1[1]-pol1[2],pol1[2]-pol1[0],pol1[0]-pol1[1]]),axis=1))
         self.groesste_linie=inds[self.ander]
 lisde=[[0,1,3],[0,7,3],[2,3,4],[4,3,5],[6,5,3],[1,2,3]]
@@ -30,11 +33,11 @@ for i in lisde:
 def dieprozedur(ptest):
     ptest=np.array(ptest)
     for i in Dreiecke:
+        #Versuch der Interpolation der Position eines ArUcO Codes, 
+        #ggf. eine vorgeschriebene Bibliothek verwenden
         if i.pol1.encloses_point(Point(*ptest)):
             p1=i.pol1.vertices[i.groesste_linie[0]]
-            # p1=np.asarray(p1,dtype=int)
-            # p2=np.asarray(i.pol1.vertices[i.groesste_linie[1]],dtype=int)
-            # p3=np.asarray(i.pol1.vertices[i.ander],dtype=int)
+
             p1=np.asarray(i.pol1.vertices[0],dtype=int)
             p2=np.asarray(i.pol1.vertices[1],dtype=int)
             p3=np.asarray(i.pol1.vertices[2],dtype=int)
@@ -45,13 +48,7 @@ def dieprozedur(ptest):
             werte[2]=max([0,1-d[2]/min([norm(p3-p1),norm(p3-p2)])])
             werte=[i*1/sum(werte) for i in werte]
             #werte=np.array(max([0,1-d[0]/min()]),max([0,1-d[1]/min()]),max([0,1-d[2]/min()]))
-            # for j in [p2,p3,ptest,p1]:
-            #     j-=p1
-            # alpha=np.arctan(p2[1]/p2[0])
-            # for j in [p2,p3,ptest]:
-            #     k=j.copy()
-            #     j[0]=k[0]*np.cos(alpha)-k[1]*np.sin(alpha)
-            #     j[1]=k[0]*np.sin(alpha)-k[1]*np.cos(alpha)
+
             q1=np.array(i.pol2.vertices[i.groesste_linie[0]],dtype=int)
             q2=np.array(i.pol2.vertices[i.groesste_linie[1]],dtype=int)
             q3=np.array(i.pol2.vertices[i.ander],dtype=int)
@@ -94,6 +91,10 @@ l=[3543,245]
 s=Serial("/dev/ttyACM0",baudrate=9600)
 def warter():
     while True:
+        #Funktion für IO, Soll bei aktiviertung den Arm zum Code fahren,
+        #Schrittmotor herunter, Schrittmotor hoch und zurück, bei jedem Schritt
+        #auf Antwort des Arduinos warten, Momentan probleme damit, 
+        #Weil pi bislang einfach weiter macht.
         k=input()
         st="0,%d,%d\n"%(l[0],l[1])
         s.write(st.encode('utf-8'))
@@ -130,6 +131,7 @@ k.start()
 dicter=cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_100) 
 print("HIER")
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+    #for-loop für die Kamera
     image = frame.array
 
     key = cv.waitKey(1) & 0xFF
@@ -170,12 +172,7 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
             print("Punkte:",x,y)
             print("Vorgeschlagen:%d,%d Drücke [ENTER] zum ausführen"%(stat[0],stat[1]))
             print("Vorgeschlagen:",stat)
-            if x>240:
-                bef=1
-                magn=int(19*(x-200)/(400-200))
-            elif x<160:
-                bef=0
-                magn=int(18*(x-150)/(400-200))
+
             else:
                 bef=4
         else:

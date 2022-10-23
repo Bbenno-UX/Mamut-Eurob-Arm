@@ -6,6 +6,8 @@ bool fertig(){
 }
 
 void leveln(){
+  //Schrittmotor wird zum Engschalter bewegt, um seine aktuelle Position
+  //neu zu ermitteln
   while(digitalRead(LEVEL)){
         myMotor->onestep(FORWARD,SINGLE);
         delayMicroseconds(usecs);
@@ -15,6 +17,7 @@ void leveln(){
   }
 }
 void turner(int z,int pin,long& t,bool& aktiv){
+  //wird immer wieder aufgerufen, stellt die Servos, alternativ über timer möglich, mal gucken
 if(aktiv && micros()-t>20000-z){
   digitalWrite(pin,HIGH);
   aktiv=false;
@@ -44,6 +47,8 @@ bool schritter(){//funktion für schrittmotoren adafruit benutzt dummerweise "de
   return false;
 }
 bool servo_akt(int z,int& ztemp,int& del){
+  //Fungiert als "Anfahrkurve" für Servos, der Quadratsinus hat sanftes 
+  //Verhalten hervorgebracht,darum wurde er genommen
   if(abs(ztemp-z)>2){
     //Serial.println("was");
   ztemp=ztemp+(z-ztemp)*pow(sin(del*2*Pi/150),2);
@@ -58,6 +63,8 @@ void abr(){
   schritte=50;
 }
 void ovf_kontrolle(){
+  //Bei Benutzung von micros() geschieht alle 40 Minuten ein Overflow, die Funktion
+  //hier soll das abschirmen
   if(micros()<t1){
     for(int i=0;i<sizeof(tims)/sizeof(tims[0]);i++){
       *tims[i]=0;

@@ -95,6 +95,7 @@ void loop() {
         }
   }
       else if(Serial.available()==0 && availprev && micros()-serles>4000){
+      //nix mehr einzulesen, auswerten
       serbool=false;
       k=0;
       j=0;
@@ -102,6 +103,9 @@ void loop() {
   availprev=false;
   for(int i=0;i<4;i++){
     if(buffers[i][0]!=0){
+      //wenn vernünftige Werte ausgelesen, werden die Werte für die Aktoren
+      //bestimmt. Wenn nix vernünftiges angekommen ist, bleiben die Werte,
+      //wie sie vorher waren
       *steller[i]=atof(buffers[i]);
     }
   }
@@ -121,12 +125,16 @@ turner(z1temp,PIN1,t1,aktiv1);
 turner(z2temp,PIN2,t2,aktiv2);
 turner(z3temp,PIN3,t3,aktiv3);
  if(!schritter()){
-  //Serial.print(schritte);Serial.print(":\t");Serial.print(z1temp);Serial.print("\t");Serial.println(z2temp);
+  //wird immer wieder aufgerufen, wenn Soll und ist vom Schrittmotor erreicht ist,
+  //gehts zum ersten Servo
   if (micros()-t_akt>20000){
     t_akt=micros();
+    //das gleiche Spiel die Servos runter
   if(!servo_akt(z1,z1temp,del1)){
     if(!servo_akt(z2,z2temp,del2)){
       if(!servo_akt(z3,z3temp,del3) && !serbool){
+        //bislang so geplant, dass bei Stellung aller Aktoren ein Signal
+        //zurückgegeben wird, scheitert momentan an umsetzung
         serbool=true;
         Serial.println(1);
       }
